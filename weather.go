@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -16,21 +14,21 @@ import (
 )
 
 const (
-	host                = "172.16.60.206"
+	host                = "172.16.60.211"
 	port                = 5432
 	user                = "postgres"
-	password            = "0813727767"
-	dbname              = "test_akara"
+	password            = "akara"
+	dbname              = "akara"
 	DurationToAggregate = 1 * time.Minute
 )
 
 type Device struct {
-	ChipID      int     `json:"chipid"`
+	ChipID      string  `json:"chipid"`
 	Token       string  `json:"token"`
 }
 
 type Data struct {
-	ChipID      int     `json:"chipid"`
+	ChipID      string  `json:"chipid"`
 	Humidity    float32 `json:"humidity"`
 	Temperature float32 `json:"temperature"`
 }
@@ -102,48 +100,6 @@ func chipIDExistsInPostgres(chipID string) bool {
 	return true
 }
 
-func confirmAndStoreData(chipID, token string) error {
-	fmt.Printf("ChipID %s not registered. Do you want to register? (y/n): ", chipID)
-	var confirm string
-	_, err := fmt.Scanln(&confirm)
-	if err != nil {
-		return err
-	}
-	confirm = strings.TrimSpace(strings.ToLower(confirm))
-
-	if confirm != "y" {
-		fmt.Println("ChipID is reject to server")
-		return nil
-	}
-
-	if err := storeDataInPostgres(chipID, token); err != nil {
-		return err
-	}
-
-	fmt.Println("ChipID is accept to server")
-	return nil
-}
-
-func registerChipID(chipID, token string) error {
-    if chipIDExistsInPostgres(chipID) {
-        fmt.Printf("ChipID %s already exists in the database\n", chipID)
-        return nil
-    }
-
-    if err := connectToDB(); err != nil {
-        return err
-    }
-    defer db.Close()
-
-    _, err := db.Exec("INSERT INTO chip_data (chipid, token) VALUES ($1, $2)", chipID, token)
-    if err != nil {
-        return err
-    }
-
-    fmt.Println("Successfully stored chip data in the database")
-    return nil
-}
-
 func handleESP32Data(w http.ResponseWriter, r *http.Request) {
 	var chipID string
 	contentLength := r.ContentLength
@@ -161,22 +117,9 @@ func handleESP32Data(w http.ResponseWriter, r *http.Request) {
 			return
 	}
 
-	chipID = strconv.Itoa(data.ChipID)
-	token := data.Token
+	chipID = data.ChipID
 
-	if chipIDExistsInPostgres(chipID) {
-			fmt.Printf("ChipID %s already exists in file or database\n", chipID)
-			w.WriteHeader(http.StatusOK)
-			return
-	}
-
-	if err := confirmAndStoreData(chipID, token); err != nil {
-			http.Error(w, "Error processing data", http.StatusInternalServerError)
-			log.Println("Error processing data:", err)
-			return
-	}
-
-	fmt.Println("Successfully handled ESP32 data")
+	fmt.Printf("ChipID %s not registered in database\n", chipID)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -197,7 +140,7 @@ func handleDHT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chipID := strconv.Itoa(data.ChipID)
+	chipID := data.ChipID
 	humid := fmt.Sprintf("%.2f", data.Humidity)
 	temp := fmt.Sprintf("%.2f", data.Temperature)
 

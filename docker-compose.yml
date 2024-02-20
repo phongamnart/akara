@@ -1,0 +1,56 @@
+version: '3'
+services:
+  register:
+    image: akarax10/register-esp32
+    container_name: registerESP32
+    ports:
+      - "9001:9001"
+    networks:
+      - by_x10
+
+  weather:
+    image: akarax10/get-weather
+    container_name: getWeather
+    ports:
+      - "9000:9000"
+    networks:
+      - by_x10
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: Grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - by_x10
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    container_name: PG4
+    restart: always
+    environment:
+      PGADMIN_DAFAULT_EMAIL: demotaskx10@gmail.com
+      PGADMIN_DAFAULT_PASSWORD: pgadmin
+    ports:
+      - "8080:80"
+    networks:
+      - by_x10
+    depends_on:
+      - timescaledb
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: Timescaledb
+    environment:
+      POSTGRES_DB: akara
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: akara
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./table.sql:/docker-entrypoint-initdb.d/table.sql
+    networks:
+      - by_x10
+
+networks:
+  by_x10:
