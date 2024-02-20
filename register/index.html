@@ -60,7 +60,7 @@
             var chipid = document.getElementById("chipid").innerText;
             var token = document.getElementById("token").innerText;
 
-            fetch("http://172.16.60.211:9001/saveToPostgres", {
+            fetch("http://localhost:9001/saveToPostgres", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
