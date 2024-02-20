@@ -1,21 +1,5 @@
 version: '3'
 services:
-  register:
-    image: akarax10/register-esp32
-    container_name: registerESP32
-    ports:
-      - "9001:9001"
-    networks:
-      - by_x10
-
-  weather:
-    image: akarax10/get-weather
-    container_name: getWeather
-    ports:
-      - "9000:9000"
-    networks:
-      - by_x10
-
   grafana:
     image: grafana/grafana:latest
     container_name: Grafana
