@@ -1,40 +1,30 @@
-version: '3'
-services:
-  grafana:
-    image: grafana/grafana:latest
-    container_name: Grafana
-    ports:
-      - "3000:3000"
-    networks:
-      - by_x10
+version: '3.7'
 
-  pgadmin4:
-    image: dpage/pgadmin4
-    container_name: PG4
-    restart: always
-    environment:
-      PGADMIN_DAFAULT_EMAIL: demotaskx10@gmail.com
-      PGADMIN_DAFAULT_PASSWORD: pgadmin
+services:
+  timescaledb:
+    image: usertestx10/timescaledb
+    container_name: timescaledb
     ports:
-      - "8080:80"
-    networks:
-      - by_x10
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d/
+
+  golang:
+    image: golang
+    container_name: golang
+    working_dir: /app
     depends_on:
       - timescaledb
 
-  timescaledb:
-    image: timescale/timescaledb:latest-pg16
-    container_name: Timescaledb
-    environment:
-      POSTGRES_DB: akara
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: akara
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
     ports:
-      - "5432:5432"
-    volumes:
-      - ./table.sql:/docker-entrypoint-initdb.d/table.sql
-    networks:
-      - by_x10
+      - "3000:3000"
+    depends_on:
+      - timescaledb
 
 networks:
   by_x10:
